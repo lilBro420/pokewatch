@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   ScrollView,
   StatusBar,
+  Button,
 } from 'react-native';
 import type { ElementType } from './types';
 import { WATCH_THEMES } from './constants/themes';
@@ -14,11 +15,13 @@ import { useBattery } from './hooks/useBattery';
 import { AppleWatchChassis } from './components/AppleWatchChassis';
 import { WatchFaceContent } from './components/WatchFaceContent';
 import { ThemeSelector } from './components/ThemeSelector';
+import Iphone15Screen from './components/Iphone15Screen';
 
 export default function App() {
   const [currentType, setCurrentType] = useState<ElementType>('fire');
   const currentTheme = WATCH_THEMES[currentType];
   const [currentPokemonId, setCurrentPokemonId] = useState<number>(currentTheme.defaultPokemonId);
+  const [showiPhone15, setShowiPhone15] = useState(false);
 
   // Hook desacoplado para las peticiones a PokeAPI
   const { pokemon, loading } = usePokemonWatchData(currentPokemonId);
@@ -48,37 +51,46 @@ export default function App() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" backgroundColor="#0B0E14" />
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Encabezado */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>
-            EDICIÓN <Text style={{ color: currentTheme.accentColor }}>{currentTheme.name}</Text>
-          </Text>
-        </View>
+      {showiPhone15 ? (
+        <Iphone15Screen onClose={() => setShowiPhone15(false)} />
+      ) : (
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Encabezado */}
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>
+              EDICIÓN <Text style={{ color: currentTheme.accentColor }}>{currentTheme.name}</Text>
+            </Text>
+          </View>
 
-        {/* Chassis oficial del Apple Watch */}
-        <AppleWatchChassis accentColor={currentTheme.accentColor}>
-          <WatchFaceContent
-            theme={currentTheme}
+          {/* Chassis oficial del Apple Watch */}
+          <AppleWatchChassis accentColor={currentTheme.accentColor}>
+            <WatchFaceContent
+              theme={currentTheme}
+              pokemon={pokemon}
+              loading={loading}
+              battery={battery}
+            />
+          </AppleWatchChassis>
+
+          {/* Panel de Controles y Selector de Temas */}
+          <ThemeSelector
+            currentType={currentType}
+            onSelectType={handleSelectType}
+            currentPokemonId={currentPokemonId}
+            onSelectPokemon={handleSelectPokemon}
+            onRandomPokemon={handleRandomPokemon}
             pokemon={pokemon}
-            loading={loading}
-            battery={battery}
           />
-        </AppleWatchChassis>
 
-        {/* Panel de Controles y Selector de Temas */}
-        <ThemeSelector
-          currentType={currentType}
-          onSelectType={handleSelectType}
-          currentPokemonId={currentPokemonId}
-          onSelectPokemon={handleSelectPokemon}
-          onRandomPokemon={handleRandomPokemon}
-          pokemon={pokemon}
-        />
-      </ScrollView>
+          {/* Botón para abrir pantalla iPhone 15 */}
+          <View style={styles.iphoneButtonContainer}>
+            <Button title="iPhone 15" onPress={() => setShowiPhone15(true)} />
+          </View>
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
@@ -104,5 +116,9 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '900',
     letterSpacing: 2,
+  },
+  iphoneButtonContainer: {
+    marginTop: 24,
+    alignItems: 'center',
   },
 });
